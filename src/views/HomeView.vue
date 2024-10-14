@@ -1,12 +1,14 @@
 <script setup lang="ts">
+import { reactive } from 'vue' // Asegúrate de importar reactive
 import { useUserStore } from '@/stores/userStore'
-import { useRouter } from 'vue-router'
+import type { User } from '@/models/UserModel'
+import { useAuthStore } from '@/stores/authStore'
 
-const userStore = useUserStore()
-const router = useRouter()
-const user = userStore.user
+const user: User = reactive<User>(useUserStore().user)
+const authStore = useAuthStore()
+
 const logout = () => {
-  router.push({ name: 'LoginPage' })
+  authStore.logout()
 }
 </script>
 

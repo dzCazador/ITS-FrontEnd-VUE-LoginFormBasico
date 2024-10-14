@@ -1,47 +1,73 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+//import { reactive } from 'vue'
+//import type { User } from '@/models/UserModel.ts'
+//local import
+//import { useUserStore } from '@/stores/userStore'
+import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/userStore'
 
-import type { User } from '@/models/UserModel.ts'
-
-const user = reactive<User>({
-  login: '',
-  password: ''
-})
+//lib import
+import { Form, Field } from 'vee-validate'
+import * as Yup from 'yup'
+console.log('Hola')
 const router = useRouter()
-const userStore = useUserStore()
+const authStore = useAuthStore()
 
-const handleSubmit = () => {
-  userStore.setUser(user)
+//if (authStore.auth.data) router.push('/')
+
+const schema = Yup.object().shape({
+  username: Yup.string().required('Usuario Requerido'),
+  password: Yup.string().required('Password Requerida')
+})
+
+function handleSubmit(values: any, { setErrors }: any) {
+  const { username, password } = values
+  return authStore
+    .login(username, password)
+    .then(() => {
+      router.push('/')
+    })
+    .catch((error) => setErrors({ apiError: error }))
+
   router.push({ name: 'Home' })
 }
 </script>
 
 <template>
   <div class="wrapper">
-    <form id="loginForm" @submit.prevent="handleSubmit">
+    <Form @submit="handleSubmit" :validation-schema="schema" v-slot="{ errors, isSubmitting }">
       <h1>Login</h1>
       <div class="input-bx">
-        <input name="user" v-model="user.login" type="text" placeholder="Usuario" required />
+        <Field
+          name="username"
+          type="text"
+          :class="{ 'is-invalid': errors.username || errors.apiError }"
+          placeholder="Usuario"
+          required
+        />
         <ion-icon class="icon" name="person-circle"></ion-icon>
       </div>
       <div class="input-bx">
-        <input
+        <Field
           name="password"
-          v-model="user.password"
+          :class="{ 'is-invalid': errors.password || errors.apiError }"
           type="password"
           placeholder="Contraseña"
           required
         />
         <ion-icon class="icon" name="lock-closed"></ion-icon>
+        <div class="invalid-feedback">{{ errors.password }}</div>
       </div>
       <div class="remember-forgot">
         <label><input type="checkbox" name="remember" /> Recordarme</label>
         <a href="#">Olvidaste tu contraseña</a>
       </div>
-      <button type="submit" class="btn">Ingresar</button>
-    </form>
+      <button type="submit" class="btn">
+        <span v-show="isSubmitting" class="loader"></span>
+        <p v-show="!isSubmitting">Ingresar</p>
+      </button>
+    </Form>
+    <div v-if="errors.apiError" class="error-alert">{{ errors.apiError }}</div>
   </div>
 </template>
 
@@ -83,8 +109,19 @@ const handleSubmit = () => {
   padding: 20px 45px 20px 20px;
 }
 
+.wrapper .input-bx input.is-invalid {
+  background: #333;
+  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: red;
+}
+
 .wrapper .input-bx input::placeholder {
   color: #fff;
+}
+
+.wrapper .input-bx input.is-invalid::placeholder {
+  color: #ff0000;
 }
 
 .wrapper .input-bx .icon {
@@ -93,6 +130,10 @@ const handleSubmit = () => {
   top: 50%;
   transform: translateY(-50%);
   font-size: 1.5em;
+}
+
+.wrapper .input-bx .invalid-feedback {
+  font-weight: 300;
 }
 
 .wrapper .remember-forgot {
@@ -127,5 +168,37 @@ const handleSubmit = () => {
   font-size: 1.2em;
   font-weight: 600;
   color: #333;
+}
+
+button p {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #333;
+}
+
+.loader {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  border-top-color: #333;
+  animation: rotation 1s infinite linear;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.error-alert {
+  margin: 16px 0 0 0;
+  width: 100%;
+  background: transparent;
+  color: red;
+  text-align: center;
+  font-weight: 400;
 }
 </style>
