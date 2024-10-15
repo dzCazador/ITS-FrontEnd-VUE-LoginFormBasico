@@ -1,10 +1,10 @@
 export { fakeBackend }
-
+//Lib Imports
 import type { User } from '@/models/UserModel'
 import type { JwtPayload } from '@/models/JwtModel'
 import type { AuthRequestBody } from '@/models/AuthReqModel'
 
-// Array de usuarios en localstorage
+// Users Array in localstorage
 const usersKey = 'vue-3-jwt-refresh-token-users'
 const users: User[] = JSON.parse(localStorage.getItem(usersKey) || '[]')
 
@@ -40,10 +40,10 @@ function fakeBackend() {
 
   window.fetch = function (url, opts: any): Promise<Response> {
     return new Promise((resolve, reject) => {
-      // Envolvemos la funcion en un setTimeout para simular una llamada a API
-      setTimeout(handleRoute, 3000)
+      // add a 1.5seg delay to simulate the api server response
+      setTimeout(handleRoute, 1500)
 
-      // manejamos las rutas falsas como si hicieramos llamados api
+      // manage fake routes
       function handleRoute() {
         if (opts) {
           const { method } = opts

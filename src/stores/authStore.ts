@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import router from '@/router'
 
 //localImport
-import type { User, UserState } from '@/models/UserModel'
+import type { User } from '@/models/UserModel'
 import { useSessionStore } from '@/stores/sessionStore'
 
 const baseUrl = `${import.meta.env.VITE_API_URL}/users`
@@ -14,7 +14,6 @@ export const useAuthStore = defineStore({
     auth: {} as {
       loading: boolean
       user: User | undefined | null
-      //data?: UserState | undefined | null
       refreshTokenTimeout: number | null
     }
   }),

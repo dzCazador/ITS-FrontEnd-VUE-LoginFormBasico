@@ -1,26 +1,27 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'vue-router'
-
-//lib import
 import { Form, Field } from 'vee-validate'
 import * as Yup from 'yup'
 
+// Get the router instance and the auth store instance
 const router = useRouter()
 const authStore = useAuthStore()
 
-//if (authStore.auth.data) router.push('/')
-
+// Define the form validation schema
 const schema = Yup.object().shape({
   username: Yup.string().required('Usuario Requerido'),
   password: Yup.string().required('Password Requerida')
 })
 
+// Define the form submission handler
 function handleSubmit(values: any, { setErrors }: any) {
   const { username, password } = values
+  // Validate the form data using the schema
   return authStore
     .login(username, password)
     .then(() => {
+      // Redirect to the dashboard page after successful login
       router.push('/')
     })
     .catch((error) => setErrors({ apiError: error }))
@@ -40,6 +41,7 @@ function handleSubmit(values: any, { setErrors }: any) {
           required
         />
         <ion-icon class="icon" name="person-circle"></ion-icon>
+        <div class="invalid-feedback">{{ errors.username }}</div>
       </div>
       <div class="input-bx">
         <Field
@@ -134,7 +136,7 @@ function handleSubmit(values: any, { setErrors }: any) {
   display: flex;
   justify-content: space-between;
   font-size: 1.2em;
-  margin: -15px 0 15px;
+  margin: 15px 0 15px;
 }
 
 .wrapper .remember-forgot label input {
@@ -162,6 +164,7 @@ function handleSubmit(values: any, { setErrors }: any) {
   font-size: 1.2em;
   font-weight: 600;
   color: #333;
+  transition: background-color 0.3s ease;
 }
 
 button p {
@@ -169,7 +172,9 @@ button p {
   font-weight: 600;
   color: #333;
 }
-
+.btn:hover {
+  background-color: #4197b6;
+}
 .loader {
   margin: auto 0;
   width: 24px;
