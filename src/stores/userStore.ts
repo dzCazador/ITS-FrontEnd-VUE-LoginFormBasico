@@ -1,17 +1,26 @@
 import { defineStore } from 'pinia'
+import type { UserState } from '@/models/UserModel.ts'
+import { fetchWrapper } from '@/helpers/fetchWrapper'
 
-import type { User } from '@/models/UserModel.ts'
+const baseUrl = `${import.meta.env.VITE_API_URL}/users`
 
-export const useUserStore = defineStore('user', {
-  state: () => ({
-    user: {
-      login: '',
-      password: ''
-    } as User
+export const useUserStore = defineStore({
+  id: 'user',
+  state: (): UserState => ({
+    loading: false,
+    users: null
   }),
   actions: {
-    setUser(user: User) {
-      this.user = user
+    async getAll() {
+      this.loading = true
+      try {
+        const response = await fetchWrapper.get(baseUrl)
+        this.loading = false
+        this.users = response
+      } catch (error) {
+        this.loading = false
+        console.error(error)
+      }
     }
   }
 })

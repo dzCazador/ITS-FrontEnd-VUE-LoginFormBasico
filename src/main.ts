@@ -10,17 +10,17 @@ import router from './router'
 
 async function startApp() {
   const app = createApp(App)
-
-  app.use(createPinia())
+  const pinia = createPinia()
+  app.use(pinia)
   app.use(router)
+
   try {
     const authStore = useAuthStore()
     await authStore.refreshToken()
   } catch (error) {
-    console.error('Error al iniciar la app:', error)
+    console.warn('Usuario no logueado. Se envia al Login:', error)
     router.push('/login')
   }
-
   app.mount('#app')
 }
 

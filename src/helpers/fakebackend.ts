@@ -9,19 +9,29 @@ const usersKey = 'vue-3-jwt-refresh-token-users'
 const users: User[] = JSON.parse(localStorage.getItem(usersKey) || '[]')
 
 // Agregar un usuario test en localstorage si no hay ninguno
-const user: User = {
+const user1: User = {
   id: 1,
   firstName: 'Diego',
   lastName: 'Maradona',
-  login: 'prueba',
+  userName: 'dmaradona',
   password: '123456',
   isAdmin: true,
   refreshToken: []
 }
 
+const user2: User = {
+  id: 2,
+  firstName: 'Leo',
+  lastName: 'Messi',
+  userName: 'lmessi',
+  password: '654321',
+  isAdmin: false,
+  refreshToken: []
+}
 // si no hay usuarios creamos uno y lo guardamos en almacenamiento local
 if (!users.length) {
-  users.push(user)
+  users.push(user1)
+  users.push(user2)
   localStorage.setItem(usersKey, JSON.stringify(users))
 }
 
@@ -31,25 +41,27 @@ function fakeBackend() {
   window.fetch = function (url, opts: any): Promise<Response> {
     return new Promise((resolve, reject) => {
       // Envolvemos la funcion en un setTimeout para simular una llamada a API
-      setTimeout(handleRoute, 1000)
+      setTimeout(handleRoute, 3000)
 
       // manejamos las rutas falsas como si hicieramos llamados api
       function handleRoute() {
-        const { method } = opts
-        switch (true) {
-          case url.toString().endsWith('/users/authenticate') && method === 'POST':
-            return authenticate()
-          case url.toString().endsWith('/users/refresh-token') && method === 'POST':
-            return refreshToken()
-          case url.toString().endsWith('/users/revoke-token') && method === 'POST':
-            return revokeToken()
-          case url.toString().endsWith('/users') && method === 'GET':
-            return getUsers()
-          default:
-            // Pass through any requests not handled above
-            return realFetch(url, opts)
-              .then((response) => resolve(response))
-              .catch((error) => reject(error))
+        if (opts) {
+          const { method } = opts
+          switch (true) {
+            case url.toString().endsWith('/users/authenticate') && method === 'POST':
+              return authenticate()
+            case url.toString().endsWith('/users/refresh-token') && method === 'POST':
+              return refreshToken()
+            case url.toString().endsWith('/users/revoke-token') && method === 'POST':
+              return revokeToken()
+            case url.toString().endsWith('/users') && method === 'GET':
+              return getUsers()
+            default:
+              // Pass through any requests not handled above
+              return realFetch(url, opts)
+                .then((response) => resolve(response))
+                .catch((error) => reject(error))
+          }
         }
       }
 
@@ -57,7 +69,7 @@ function fakeBackend() {
 
       function authenticate() {
         const { username, password } = body<AuthRequestBody>()
-        const user = users.find((x) => x.login === username && x.password === password)
+        const user = users.find((x) => x.userName === username && x.password === password)
 
         if (!user) return error('Usuario o contraseña incorrectos')
 
@@ -67,7 +79,7 @@ function fakeBackend() {
 
         return ok({
           id: user.id,
-          userName: user.login,
+          userName: user.userName,
           firstName: user.firstName,
           lastName: user.lastName,
           isAdmin: user.isAdmin,
@@ -89,7 +101,7 @@ function fakeBackend() {
 
         return ok({
           id: user.id,
-          userName: user.login,
+          userName: user.userName,
           firstName: user.firstName,
           lastName: user.lastName,
           isAdmin: user.isAdmin,
@@ -139,11 +151,12 @@ function fakeBackend() {
       }
 
       function isLoggedIn(): boolean {
-        // Chequea si el JWT esta en el auth header
+        // check if the JWT is in the auth header
         const authHeader = opts.headers?.['Authorization'] || ''
+
         if (!authHeader.startsWith('Bearer fake-jwt-token')) return false
 
-        // Chequea si el token expiro
+        // Check if the token is expired
         try {
           const jwtToken = JSON.parse(atob(authHeader.split('.')[1])) as JwtPayload
           const tokenExpired = Date.now() > jwtToken.exp * 1000

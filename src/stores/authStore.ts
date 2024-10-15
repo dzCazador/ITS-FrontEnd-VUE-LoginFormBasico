@@ -1,18 +1,26 @@
 import { fetchWrapper } from '@/helpers/fetchWrapper'
-import type { User } from '@/models/UserModel'
 import { defineStore } from 'pinia'
 import router from '@/router'
+
+//localImport
+import type { User, UserState } from '@/models/UserModel'
+import { useSessionStore } from '@/stores/sessionStore'
 
 const baseUrl = `${import.meta.env.VITE_API_URL}/users`
 
 export const useAuthStore = defineStore({
   id: 'auth',
   state: () => ({
-    auth: {} as { loading: boolean; data?: User | null; refreshTokenTimeout: number | null }
+    auth: {} as {
+      loading: boolean
+      user: User | undefined | null
+      //data?: UserState | undefined | null
+      refreshTokenTimeout: number | null
+    }
   }),
   actions: {
     async login(username: string, password: string) {
-      this.auth.data = await fetchWrapper.post(
+      this.auth.user = await fetchWrapper.post(
         `${baseUrl}/authenticate`,
         { username, password },
         { credentials: 'include' }
@@ -22,11 +30,11 @@ export const useAuthStore = defineStore({
     logout() {
       fetchWrapper.post(`${baseUrl}/revoke-token`, {}, { credentials: 'include' })
       this.stopRefreshTokenTimer()
-      this.auth.data = null
-      router.push('/')
+      this.auth.user = null
+      router.push('/login')
     },
     async refreshToken() {
-      this.auth.data = await fetchWrapper.post(
+      this.auth.user = await fetchWrapper.post(
         `${baseUrl}/refresh-token`,
         {},
         { credentials: 'include' }
@@ -34,17 +42,20 @@ export const useAuthStore = defineStore({
       this.startRefreshTokenTimer()
     },
     startRefreshTokenTimer() {
-      if (!this.auth.data || !this.auth.data.jwtToken) return
+      const sessionStore = useSessionStore()
+      if (!this.auth.user || !this.auth.user?.jwtToken) return
 
-      //parsear objeto JSON de base64
-      const jwtBase64 = this.auth.data.jwtToken.split('.')[1]
+      //to parse base64 json object
+      const jwtBase64 = this.auth.user?.jwtToken.split('.')[1]
       const decodedJwtToken = JSON.parse(atob(jwtBase64))
 
-      //Crear un timeout para refrescar el token antes de que expire
+      //Create a timeout to refresh the token before expires
       const expires = new Date(decodedJwtToken.exp * 1000)
       const timeout = expires.getTime() - Date.now() - 60 * 1000
 
       this.auth.refreshTokenTimeout = setTimeout(this.refreshToken, timeout)
+      //Save de session vars in the session store
+      sessionStore.update(jwtBase64, new Date(Date.now()), new Date(Date.now() + timeout), expires)
     },
     stopRefreshTokenTimer() {
       if (this.auth.refreshTokenTimeout) {

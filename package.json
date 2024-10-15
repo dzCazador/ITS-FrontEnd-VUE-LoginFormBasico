@@ -13,6 +13,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "ionicons": "^7.4.0",
     "pinia": "^2.1.7",
     "vee-validate": "^4.13.2",
     "vue": "^3.4.29",

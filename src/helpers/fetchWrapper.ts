@@ -32,11 +32,11 @@ function request(method: string) {
 
 function authHeader(url: string): Record<string, string> {
   const { auth } = useAuthStore()
-  const isLoggedIn = !!auth.data?.jwtToken
+  const isLoggedIn = !!auth.user?.jwtToken
   const isApiUrl = url.startsWith(import.meta.env.VITE_API_URL)
 
   if (isLoggedIn && isApiUrl) {
-    return { Authroization: `Bearer ${auth.data?.jwtToken}` }
+    return { Authorization: `Bearer ${auth.user?.jwtToken}` }
   } else {
     return {}
   }
@@ -48,7 +48,7 @@ async function handleResponse(response: Response): Promise<any> {
 
   if (!response.ok) {
     const { auth, logout } = useAuthStore()
-    if ([401, 403].includes(response.status) && auth.data) {
+    if ([401, 403].includes(response.status) && auth.user) {
       logout()
     }
 

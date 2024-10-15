@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { reactive } from 'vue' // Asegúrate de importar reactive
-import { useUserStore } from '@/stores/userStore'
+import { onMounted } from 'vue'
 import type { User } from '@/models/UserModel'
 import { useAuthStore } from '@/stores/authStore'
+import { useUserStore } from '@/stores/userStore'
+import { useSessionStore } from '@/stores/sessionStore'
 
-const user: User = reactive<User>(useUserStore().user)
 const authStore = useAuthStore()
+const userStore = useUserStore()
+const logUser: User | undefined | null = authStore.auth.user
+const sessionStore = useSessionStore()
+
+onMounted(() => {
+  userStore.getAll()
+})
 
 const logout = () => {
   authStore.logout()
@@ -14,9 +21,29 @@ const logout = () => {
 
 <template>
   <div>
-    <h1>Bienvenido, {{ user.login }}!</h1>
-    <h1>Su Password es: {{ user.password }}</h1>
+    <h1>Bienvenido, {{ logUser?.firstName }} {{ logUser?.lastName }}!</h1>
+    <h1>Rol, {{ logUser?.firstName }} {{ logUser?.lastName }}!</h1>
   </div>
+  <div>
+    <h1>Informaci&oacute;n de Sesi&oacute;n:</h1>
+    <h2>JWT Payload: {{ sessionStore.data?.payload }}</h2>
+    <h2>JWT Creado a las: {{ sessionStore.data?.created.toLocaleTimeString() }}</h2>
+    <h2>JWT Expira a las: {{ sessionStore.data?.expires.toLocaleTimeString() }}</h2>
+    <h2>JWT se refrescar&aacute; a las: {{ sessionStore.data?.refresh.toLocaleTimeString() }}</h2>
+  </div>
+  <div>
+    <h1>Lista de Usuarios</h1>
+  </div>
+  <div>
+    <ul>
+      <li v-for="user in userStore.users" :key="user.id">
+        {{ user.userName }}: {{ user.firstName }} {{ user.lastName }}
+        {{ user.isAdmin === true ? '[Administrador]' : '[Usuario]' }}
+      </li>
+    </ul>
+    <button v-if="logUser?.isAdmin">Crear nuevo usuario</button>
+  </div>
+  <br />
   <button @click="logout()">Cerrar Sesión</button>
 </template>
 
@@ -24,6 +51,18 @@ const logout = () => {
 h1 {
   color: #fff;
   margin: 20px;
+  font-weight: bold;
+}
+h2 {
+  color: #fff;
+  margin: 20px;
+  font-weight: 400;
+}
+
+li {
+  color: #fff;
+  margin: 20px;
+  font-weight: 200;
 }
 
 button {

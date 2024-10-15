@@ -1,15 +1,11 @@
 <script setup lang="ts">
-//import { reactive } from 'vue'
-//import type { User } from '@/models/UserModel.ts'
-//local import
-//import { useUserStore } from '@/stores/userStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'vue-router'
 
 //lib import
 import { Form, Field } from 'vee-validate'
 import * as Yup from 'yup'
-console.log('Hola')
+
 const router = useRouter()
 const authStore = useAuthStore()
 
@@ -28,8 +24,6 @@ function handleSubmit(values: any, { setErrors }: any) {
       router.push('/')
     })
     .catch((error) => setErrors({ apiError: error }))
-
-  router.push({ name: 'Home' })
 }
 </script>
 
@@ -66,8 +60,8 @@ function handleSubmit(values: any, { setErrors }: any) {
         <span v-show="isSubmitting" class="loader"></span>
         <p v-show="!isSubmitting">Ingresar</p>
       </button>
+      <div v-if="errors.apiError" class="error-alert">{{ errors.apiError }}</div>
     </Form>
-    <div v-if="errors.apiError" class="error-alert">{{ errors.apiError }}</div>
   </div>
 </template>
 
@@ -177,14 +171,16 @@ button p {
 }
 
 .loader {
-  width: 20px;
-  height: 20px;
+  margin: auto 0;
+  width: 24px;
+  height: 24px;
+  border: 4px solid #800080;
+  border-bottom-color: transparent;
   border-radius: 50%;
-  border: 2px solid #fff;
-  border-top-color: #333;
-  animation: rotation 1s infinite linear;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
 }
-
 @keyframes rotation {
   0% {
     transform: rotate(0deg);
